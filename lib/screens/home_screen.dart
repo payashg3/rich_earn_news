@@ -1,105 +1,39 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'article_screen.dart';
+import 'news_screen.dart';
+import 'games_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List newsList = [];
+  int selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    fetchNews();
-  }
-
-  Future<void> fetchNews() async {
-    final res = await http.get(
-      Uri.parse(
-        "http://api.mediastack.com/v1/news?access_key=6aead1479889f6a84ad54403f3b835af&countries=in",
-      ),
-    );
-
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-
-      setState(() {
-        newsList = data["data"] ?? [];
-      });
-    } else {
-      print("News API Error: ${res.statusCode}");
-      print(res.body);
-    }
-  }
+  final List screens = [NewsScreen(), GamesScreen()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("RichEarn News")),
-      body: newsList.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: newsList.length,
-              itemBuilder: (context, index) {
-                final item = newsList[index];
+      body: screens[selectedIndex],
 
-                return Card(
-                  margin: EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ✅ MEDIATASTACK IMAGE
-                      if (item["image"] != null) Image.network(item["image"]),
-
-                      Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item["title"] ?? "",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(item["description"] ?? ""),
-                            SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "+5 Coins 🪙",
-                                  style: TextStyle(color: Colors.green),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            ArticleScreen(url: item["url"]),
-                                      ),
-                                    );
-                                  },
-
-                                  child: Text("Read"),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedIndex,
+        onTap: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: "News"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_esports),
+            label: "Games",
+          ),
+        ],
+      ),
     );
   }
 }
