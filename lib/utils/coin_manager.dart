@@ -1,37 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 class CoinManager {
-  static Future<bool> canAdd(int value) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final ref = FirebaseFirestore.instance.collection("users").doc(uid);
-    final doc = await ref.get();
+  static final _db = FirebaseFirestore.instance;
+  static final _uid = FirebaseAuth.instance.currentUser!.uid;
 
-    final today = DateFormat("yyyy-MM-dd").format(DateTime.now());
+  static Future<bool> canAdd(int amount) async {
+    final doc = await _db.collection("users").doc(_uid).get();
 
-    if (!doc.exists) {
-      await ref.set({"coins": 0, "todayCoins": 0, "lastDate": today});
-    }
+    if (!doc.exists) return true;
 
-    int todayCoins = doc["todayCoins"] ?? 0;
-    String lastDate = doc["lastDate"] ?? today;
+    if (!doc.data()!.containsKey("lastSpin")) return true;
 
-    if (lastDate != today) {
-      await ref.update({"todayCoins": 0, "lastDate": today});
-      todayCoins = 0;
-    }
+    Timestamp ts = doc["lastSpin"];
+    DateTime last = ts.toDate();
+    final now = DateTime.now();
 
-    return (todayCoins + value) <= 100; // daily cap
+    return now.difference(last).inHours >= 24;
   }
 
-  static Future<void> add(int value) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
-    final ref = FirebaseFirestore.instance.collection("users").doc(uid);
-
-    await ref.update({
-      "coins": FieldValue.increment(value),
-      "todayCoins": FieldValue.increment(value),
-    });
+  static Future<void> add(int amount) async {
+    await _db.collection("users").doc(_uid).set({
+      "coins": FieldValue.increment(amount),
+      "lastSpin": FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 }

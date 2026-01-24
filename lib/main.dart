@@ -9,6 +9,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   print("🔥 Firebase connected");
+  print("userID " + FirebaseAuth.instance.currentUser!.uid);
+
   MobileAds.instance.initialize();
   runApp(const MyApp());
 }
