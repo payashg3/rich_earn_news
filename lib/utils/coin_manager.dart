@@ -2,27 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CoinManager {
-  static final _db = FirebaseFirestore.instance;
-  static final _uid = FirebaseAuth.instance.currentUser!.uid;
+  static final _firestore = FirebaseFirestore.instance;
+  static final _auth = FirebaseAuth.instance;
 
-  static Future<bool> canAdd(int amount) async {
-    final doc = await _db.collection("users").doc(_uid).get();
+  static Future<int> getCoins() async {
+    final uid = _auth.currentUser!.uid;
+    final doc = await _firestore.collection("users").doc(uid).get();
 
-    if (!doc.exists) return true;
+    if (!doc.exists) {
+      // first time user
+      await _firestore.collection("users").doc(uid).set({
+        "coins": 0,
+        "lastSpin": DateTime.now().toIso8601String(),
+      });
+      return 0;
+    }
 
-    if (!doc.data()!.containsKey("lastSpin")) return true;
-
-    Timestamp ts = doc["lastSpin"];
-    DateTime last = ts.toDate();
-    final now = DateTime.now();
-
-    return now.difference(last).inHours >= 24;
+    final data = doc.data();
+    return (data?["coins"] ?? 0) as int;
   }
 
-  static Future<void> add(int amount) async {
-    await _db.collection("users").doc(_uid).set({
-      "coins": FieldValue.increment(amount),
-      "lastSpin": FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+  static Future<void> addCoins(int value) async {
+    final uid = _auth.currentUser!.uid;
+
+    await _firestore.collection("users").doc(uid).update({
+      "coins": FieldValue.increment(value),
+      "lastSpin": DateTime.now().toIso8601String(),
+    });
   }
 }

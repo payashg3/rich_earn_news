@@ -1,96 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/coin_manager.dart';
-import 'web_games_screen.dart';
 import 'spin_game_screen.dart';
 
-class GamesScreen extends StatelessWidget {
+class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
 
-  Future<void> addCoins(int value, BuildContext context) async {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+  @override
+  State<GamesScreen> createState() => _GamesScreenState();
+}
 
-    await FirebaseFirestore.instance.collection("users").doc(uid).update({
-      "coins": FieldValue.increment(value),
+class _GamesScreenState extends State<GamesScreen> {
+  int coins = -1; // -1 means "abhi load hi nahi hua"
+
+  @override
+  void initState() {
+    super.initState();
+    loadCoins();
+  }
+
+  void loadCoins() async {
+    final c = await CoinManager.getCoins();
+    print("GAMES SCREEN COINS => $c"); // terminal proof
+    if (!mounted) return;
+    setState(() {
+      coins = c;
     });
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("+$value Coins added 🪙")));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Games")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            gameCard(
-              context,
-              icon: Icons.public,
-              title: "Online Games",
-              subtitle: "100+ games",
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => WebGamesScreen()),
-                );
-              },
+      appBar: AppBar(
+        title: const Text("RichEarn Games"),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Text(
+                coins == -1 ? "लोड हो रहा..." : "$coins 🪙",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushReplacementNamed(context, "/login");
+            },
+          ),
+        ],
+      ),
 
+      body: SafeArea(
+        child: ListView(
+          children: [
             gameCard(
               context,
               icon: Icons.casino,
               title: "Spin & Win",
-              subtitle: "Try your luck",
-              onTap: () {
-                Navigator.push(
+              subtitle: "Spin the wheel",
+              onTap: () async {
+                await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => SpinGameScreen()),
+                  MaterialPageRoute(builder: (_) => const SpinGameScreen()),
                 );
-              },
-            ),
-            gameCard(
-              context,
-              icon: Icons.quiz,
-              title: "Quiz",
-              subtitle: "Answer & win",
-              onTap: () async {
-                if (await CoinManager.canAdd(15)) {
-                  await CoinManager.add(15);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("+15 Coins 🪙")));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Daily limit reached")),
-                  );
-                }
-              },
-            ),
-
-            gameCard(
-              context,
-              icon: Icons.card_giftcard,
-              title: "Scratch Card",
-              subtitle: "Try your luck",
-              onTap: () async {
-                if (await CoinManager.canAdd(20)) {
-                  await CoinManager.add(20);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text("+20 Coins 🪙")));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Daily limit reached")),
-                  );
-                }
+                loadCoins(); // BACK aate hi refresh
               },
             ),
           ],
@@ -106,24 +85,14 @@ class GamesScreen extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 4,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: Colors.deepPurple),
-            SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 6),
-            Text(subtitle, style: TextStyle(color: Colors.grey)),
-          ],
-        ),
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: ListTile(
+        leading: Icon(icon, size: 40),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: onTap,
       ),
     );
   }

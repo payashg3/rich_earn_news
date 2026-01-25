@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_screen.dart';
 import 'article_screen.dart';
+import '../utils/coin_manager.dart';
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -51,12 +52,30 @@ class _NewsScreenState extends State<NewsScreen> {
   @override
   void initState() {
     super.initState();
+    loadCoins();
     setState(() {
       newsList = dummyNews;
       loading = false;
     });
-    fetchCoins();
   }
+
+  void loadCoins() async {
+    final c = await CoinManager.getCoins();
+    if (!mounted) return;
+    setState(() {
+      coins = c;
+    });
+  }
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   setState(() {
+  //     newsList = dummyNews;
+  //     loading = false;
+  //   });
+  //   fetchCoins();
+  // }
 
   // FETCH COINS
   Future<void> fetchCoins() async {
