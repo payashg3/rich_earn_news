@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/coin_manager.dart';
 import 'spin_game_screen.dart';
+import 'tab_game_screen.dart';
+import 'guess_number_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -38,7 +40,7 @@ class _GamesScreenState extends State<GamesScreen> {
             child: Padding(
               padding: const EdgeInsets.only(right: 12),
               child: Text(
-                coins == -1 ? "लोड हो रहा..." : "$coins 🪙",
+                coins == -1 ? "Loading.." : "$coins 🪙",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -71,6 +73,70 @@ class _GamesScreenState extends State<GamesScreen> {
                 );
                 loadCoins(); // BACK aate hi refresh
               },
+            ),
+            gameCard(
+              context,
+              icon: Icons.card_giftcard,
+              title: "Scratch & Win",
+              subtitle: "Scratch the Card",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SpinGameScreen()),
+                );
+              },
+            ),
+            gameCard(
+              context,
+              icon: Icons.ondemand_video,
+              title: "Watch Ad",
+              subtitle: "Earn Rewards",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => SpinGameScreen()),
+                );
+              },
+            ),
+            gameCard(
+              context,
+              icon: Icons.flash_on,
+              title: "Tap Challenge",
+              subtitle: "10 sec me jitna tap ho sake",
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TapGameScreen()),
+                );
+                loadCoins(); // BACK aate hi refresh
+              },
+            ),
+            gameCard(
+              context,
+              icon: Icons.pin,
+              title: "Number Guess",
+              subtitle: "1–50 number guess karo",
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const GuessNumberScreen()),
+                );
+                loadCoins(); // BACK aate hi refresh
+              },
+            ),
+            gameCard(
+              context,
+              icon: Icons.calculate,
+              title: "Math Battle",
+              subtitle: "Fast math questions",
+              onTap: () {},
+            ),
+            gameCard(
+              context,
+              icon: Icons.visibility,
+              title: "Reaction Game",
+              subtitle: "Green aate hi tap karo",
+              onTap: () {},
             ),
           ],
         ),
