@@ -8,10 +8,17 @@ import 'package:rich_earn_news/screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  print("🔥 Firebase connected");
-  print("userID " + FirebaseAuth.instance.currentUser!.uid);
 
-  MobileAds.instance.initialize();
+  print("🔥 Firebase connected");
+
+  final user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    print("userID ${user.uid}");
+  } else {
+    print("No user logged in");
+  }
+
+  await MobileAds.instance.initialize();
   runApp(const MyApp());
 }
 

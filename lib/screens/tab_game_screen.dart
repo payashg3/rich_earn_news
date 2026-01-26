@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/coin_manager.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class TapGameScreen extends StatefulWidget {
   const TapGameScreen({super.key});
@@ -14,6 +15,33 @@ class _TapGameScreenState extends State<TapGameScreen> {
   int timeLeft = 10;
   bool isRunning = false;
   Timer? timer;
+
+  // Banner
+  late BannerAd _bannerAd;
+  bool _isBannerLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadBanner();
+  }
+
+  void loadBanner() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // TEST
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (!mounted) return;
+          setState(() => _isBannerLoaded = true);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
 
   void startGame() {
     taps = 0;
@@ -62,6 +90,7 @@ class _TapGameScreenState extends State<TapGameScreen> {
   @override
   void dispose() {
     timer?.cancel();
+    _bannerAd.dispose();
     super.dispose();
   }
 
@@ -70,62 +99,76 @@ class _TapGameScreenState extends State<TapGameScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Tap Challenge")),
       body: SafeArea(
-        child: SizedBox.expand(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Time Left: $timeLeft",
-                    style: const TextStyle(fontSize: 28),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Taps: $taps",
-                    style: const TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  GestureDetector(
-                    onTap: isRunning
-                        ? () {
-                            setState(() {
-                              taps++;
-                            });
-                          }
-                        : null,
-                    child: Container(
-                      height: 200,
-                      width: 200,
-                      decoration: BoxDecoration(
-                        color: isRunning ? Colors.green : Colors.grey,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          "TAP",
-                          style: TextStyle(
-                            fontSize: 32,
-                            color: Colors.white,
+        child: Column(
+          children: [
+            Expanded(
+              child: SizedBox.expand(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Time Left: $timeLeft",
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Taps: $taps",
+                          style: const TextStyle(
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 30),
+                        GestureDetector(
+                          onTap: isRunning
+                              ? () {
+                                  setState(() {
+                                    taps++;
+                                  });
+                                }
+                              : null,
+                          child: Container(
+                            height: 200,
+                            width: 200,
+                            decoration: BoxDecoration(
+                              color: isRunning ? Colors.green : Colors.grey,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: Text(
+                                "TAP",
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: isRunning ? null : startGame,
+                          child: const Text("START"),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: isRunning ? null : startGame,
-                    child: const Text("START"),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
+            ),
+
+            // Bottom Banner
+            if (_isBannerLoaded)
+              Container(
+                height: _bannerAd.size.height.toDouble(),
+                width: _bannerAd.size.width.toDouble(),
+                child: AdWidget(ad: _bannerAd),
+              ),
+          ],
         ),
       ),
     );
