@@ -4,6 +4,7 @@ import '../utils/coin_manager.dart';
 import 'spin_game_screen.dart';
 import 'tab_game_screen.dart';
 import 'guess_number_screen.dart';
+import 'scratch_and_win_game_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -79,11 +80,12 @@ class _GamesScreenState extends State<GamesScreen> {
               icon: Icons.card_giftcard,
               title: "Scratch & Win",
               subtitle: "Scratch the Card",
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => SpinGameScreen()),
+                  MaterialPageRoute(builder: (_) => const ScratchGameScreen()),
                 );
+                loadCoins(); // BACK aate hi refresh
               },
             ),
             gameCard(
