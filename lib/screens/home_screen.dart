@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'news_screen.dart';
 import 'games_screen.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
