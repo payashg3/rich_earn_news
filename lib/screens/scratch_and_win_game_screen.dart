@@ -11,9 +11,9 @@ class ScratchGameScreen extends StatefulWidget {
   State<ScratchGameScreen> createState() => _ScratchGameScreenState();
 }
 
-class _ScratchGameScreenState extends State<ScratchGameScreen> 
+class _ScratchGameScreenState extends State<ScratchGameScreen>
     with TickerProviderStateMixin {
-  final List<int> rewards = [5, 10, 20, 50, 100, 200];
+  final List<int> rewards = [5, 10, 15, 20, 25, 50];
   final ConfettiController _confettiController = ConfettiController(
     duration: const Duration(seconds: 2),
   );
@@ -105,7 +105,10 @@ class _ScratchGameScreenState extends State<ScratchGameScreen>
     return Scaffold(
       backgroundColor: primaryBlue,
       appBar: AppBar(
-        title: const Text("Scratch & Win", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Scratch & Win",
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -120,7 +123,7 @@ class _ScratchGameScreenState extends State<ScratchGameScreen>
             gravity: 0.05,
             colors: [accentPurple, silver, Colors.blue.shade300],
           ),
-          
+
           Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -162,12 +165,9 @@ class _ScratchGameScreenState extends State<ScratchGameScreen>
                             brushSize: 30,
                             threshold: 45,
                             // ✅ COMPLETELY DARK & OPAQUE SCRATCH LAYER
-                            color: darkScratch, 
+                            color: darkScratch,
                             onThreshold: _onScratchComplete,
-                            child: GlassCard(
-                              reward: reward,
-                              glass: glass,
-                            ),
+                            child: GlassCard(reward: reward, glass: glass),
                           ),
                         ),
                       );
@@ -187,18 +187,18 @@ class GlassCard extends StatelessWidget {
   final int reward;
   final Color glass;
 
-  const GlassCard({
-    super.key, 
-    required this.reward,
-    required this.glass,
-  });
+  const GlassCard({super.key, required this.reward, required this.glass});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [glass, Colors.white.withOpacity(0.2), Colors.blue.withOpacity(0.15)],
+          colors: [
+            glass,
+            Colors.white.withOpacity(0.2),
+            Colors.blue.withOpacity(0.15),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -261,7 +261,9 @@ class ElegantDialog extends StatelessWidget {
       child: Container(
         height: 260,
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [glass, Colors.white.withOpacity(0.25)]),
+          gradient: LinearGradient(
+            colors: [glass, Colors.white.withOpacity(0.25)],
+          ),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(color: Colors.white.withOpacity(0.3)),
           boxShadow: [
@@ -279,12 +281,19 @@ class ElegantDialog extends StatelessWidget {
             const SizedBox(height: 20),
             const Text(
               "🎉 BOOM!",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               "You won $reward coins!",
-              style: TextStyle(fontSize: 18, color: Colors.white.withOpacity(0.95)),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white.withOpacity(0.95),
+              ),
             ),
             const SizedBox(height: 30),
           ],

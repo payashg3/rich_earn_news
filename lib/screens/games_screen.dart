@@ -7,6 +7,7 @@ import 'tab_game_screen.dart';
 import 'guess_number_screen.dart';
 import 'scratch_and_win_game_screen.dart';
 import 'math_battle_screen.dart';
+import 'login_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -81,7 +82,10 @@ class _GamesScreenState extends State<GamesScreen> {
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, "/login");
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => LoginScreen()),
+              );
             },
           ),
         ],
