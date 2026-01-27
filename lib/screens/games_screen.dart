@@ -6,6 +6,7 @@ import 'spin_game_screen.dart';
 import 'tab_game_screen.dart';
 import 'guess_number_screen.dart';
 import 'scratch_and_win_game_screen.dart';
+import 'math_battle_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -165,7 +166,15 @@ class _GamesScreenState extends State<GamesScreen> {
                     icon: Icons.calculate,
                     title: "Math Battle",
                     subtitle: "Fast math questions",
-                    onTap: () {},
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MathBattleScreen(),
+                        ),
+                      );
+                      loadCoins();
+                    },
                   ),
                   gameCard(
                     context,
