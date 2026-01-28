@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,86 +10,51 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  bool isPhoneRegister = true;
-  bool otpSent = false;
+  // 🔴 PHONE OTP TEMPORARILY DISABLED
+  // bool isPhoneRegister = true;
+  // bool otpSent = false;
+  // final phoneController = TextEditingController();
+  // final otpController = TextEditingController();
+  // String? _verificationId;
 
-  final phoneController = TextEditingController();
-  final otpController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String? _verificationId;
 
-  // SEND OTP
-  Future<void> sendOTP() async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: "+91${phoneController.text}",
-      verificationCompleted: (PhoneAuthCredential credential) async {
-        await _auth.signInWithCredential(credential);
-        successRegister();
-      },
-      verificationFailed: (FirebaseAuthException e) {
-        showError(e.message ?? "OTP Failed");
-      },
-      codeSent: (String verificationId, int? resendToken) {
-        setState(() {
-          _verificationId = verificationId;
-          otpSent = true;
-        });
-      },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        _verificationId = verificationId;
-      },
-    );
-  }
+  // 🔴 OTP FUNCTIONS DISABLED
+  /*
+  Future<void> sendOTP() async {}
+  Future<void> verifyOTP() async {}
+  */
 
-  // VERIFY OTP
-  Future<void> verifyOTP() async {
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: otpController.text,
-      );
-      await _auth.signInWithCredential(credential);
-      successRegister();
-    } catch (e) {
-      showError("Invalid OTP");
-    }
-  }
+  // 🔴 GOOGLE REGISTER DISABLED
+  /*
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  Future<void> signInWithGoogle() async {}
+  */
 
-  // EMAIL REGISTER
+  // ✅ EMAIL REGISTER
   Future<void> emailRegister() async {
     try {
       await _auth.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
       );
-      successRegister();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration successful 🎉")),
+      );
+
+      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String msg = "Registration failed";
+      if (e.code == 'email-already-in-use') msg = "Email already used";
+      if (e.code == 'weak-password') msg = "Weak password";
+      if (e.code == 'invalid-email') msg = "Invalid email";
 
-      if (e.code == 'email-already-in-use') {
-        msg = "Account already exists";
-      } else if (e.code == 'weak-password') {
-        msg = "Password too weak";
-      } else if (e.code == 'invalid-email') {
-        msg = "Invalid email format";
-      }
-
-      showError(msg);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
-  }
-
-  void successRegister() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Registration Successful 🎉")));
-    Navigator.pop(context); // back to login
-  }
-
-  void showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -99,114 +65,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               "Create Account",
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 30),
-            SizedBox(height: 20),
+            const SizedBox(height: 30),
+
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: "Password",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              onPressed: emailRegister,
+              child: const Text("Create Account"),
+            ),
+
+            const SizedBox(height: 20),
+
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // back to Login
+                Navigator.pop(context);
               },
-              child: Text("Already have an account? Login"),
+              child: const Text("Already have an account? Login"),
             ),
-
-            // Toggle
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isPhoneRegister = true;
-                        otpSent = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isPhoneRegister
-                          ? Colors.blue
-                          : Colors.grey,
-                    ),
-                    child: Text("By Phone"),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isPhoneRegister = false;
-                        otpSent = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: !isPhoneRegister
-                          ? Colors.blue
-                          : Colors.grey,
-                    ),
-                    child: Text("By Email"),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 30),
-
-            // PHONE REGISTER
-            if (isPhoneRegister) ...[
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: "Phone Number",
-                  prefixText: "+91 ",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 15),
-
-              if (otpSent)
-                TextField(
-                  controller: otpController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: "Enter OTP",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-              SizedBox(height: 20),
-
-              ElevatedButton(
-                onPressed: otpSent ? verifyOTP : sendOTP,
-                child: Text(otpSent ? "Verify & Register" : "Send OTP"),
-              ),
-            ]
-            // EMAIL REGISTER
-            else ...[
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 15),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: emailRegister,
-                child: Text("Create Account"),
-              ),
-            ],
           ],
         ),
       ),

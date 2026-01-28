@@ -38,7 +38,7 @@ class _TapGameScreenState extends State<TapGameScreen> {
 
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: 'ca-app-pub-9921766463937527/1414403729',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -53,7 +53,7 @@ class _TapGameScreenState extends State<TapGameScreen> {
 
   void loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712',
+      adUnitId: 'ca-app-pub-9921766463937527/9568625292',
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
@@ -64,7 +64,7 @@ class _TapGameScreenState extends State<TapGameScreen> {
 
   void loadRewarded() {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
+      adUnitId: 'ca-app-pub-9921766463937527/1246882760',
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) => _rewardedAd = ad,

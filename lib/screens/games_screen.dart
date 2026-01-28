@@ -28,7 +28,7 @@ class _GamesScreenState extends State<GamesScreen> {
     loadCoins();
 
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // TEST ID
+      adUnitId: 'ca-app-pub-9921766463937527/1429881445', // TEST ID
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(

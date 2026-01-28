@@ -81,7 +81,7 @@ class _SpinGameScreenState extends State<SpinGameScreen> {
 
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: 'ca-app-pub-9921766463937527/1881706964',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -98,7 +98,7 @@ class _SpinGameScreenState extends State<SpinGameScreen> {
 
   void loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712',
+      adUnitId: 'ca-app-pub-9921766463937527/3873046105',
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -113,7 +113,7 @@ class _SpinGameScreenState extends State<SpinGameScreen> {
 
   void loadRewarded() {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
+      adUnitId: 'ca-app-pub-9921766463937527/6708266462',
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {

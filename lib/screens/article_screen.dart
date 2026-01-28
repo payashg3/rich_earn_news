@@ -20,7 +20,7 @@ class _ArticleScreenState extends State<ArticleScreen> {
     super.initState();
 
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // test id
+      adUnitId: 'ca-app-pub-9921766463937527/5586756481', // test id
       size: AdSize.banner,
       request: AdRequest(),
       listener: BannerAdListener(

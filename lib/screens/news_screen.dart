@@ -83,7 +83,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // TEST
+      adUnitId: 'ca-app-pub-9921766463937527/1539700265', // TEST
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -98,7 +98,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   void loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // TEST
+      adUnitId: 'ca-app-pub-9921766463937527/2727485396', // TEST
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,

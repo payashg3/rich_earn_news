@@ -38,7 +38,7 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
 
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: 'ca-app-pub-9921766463937527/1591671153',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -55,7 +55,7 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
 
   void loadRewarded() {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
+      adUnitId: 'ca-app-pub-9921766463937527/2208610648',
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
