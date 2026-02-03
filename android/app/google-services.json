@@ -1,32 +1,13 @@
 {
   "project_info": {
-    "project_number": "291329131367",
-    "project_id": "richearnnews",
-    "storage_bucket": "richearnnews.firebasestorage.app"
+    "project_number": "1070967578631",
+    "project_id": "richearn-b14c7",
+    "storage_bucket": "richearn-b14c7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:291329131367:android:46c50d15de32b67fff25c2",
-        "android_client_info": {
-          "package_name": "com.example.rich_earn_news"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyA5Ty_s_b6Xf9o1Yl8iC9TK7tz-pG14Jeo"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:291329131367:android:0d90a87d74b5a64bff25c2",
+        "mobilesdk_app_id": "1:1070967578631:android:309d1be5540296ffa20aa2",
         "android_client_info": {
           "package_name": "com.payash.richearn"
         }
@@ -34,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA5Ty_s_b6Xf9o1Yl8iC9TK7tz-pG14Jeo"
+          "current_key": "AIzaSyDxFvInoHr3ZNUmXGZeSur3T0SZQi0vgMo"
         }
       ],
       "services": {

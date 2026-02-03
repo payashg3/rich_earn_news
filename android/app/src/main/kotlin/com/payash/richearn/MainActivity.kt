@@ -1,4 +1,4 @@
-package com.example.rich_earn_news
+package com.payash.richearn
 
 import io.flutter.embedding.android.FlutterActivity
 

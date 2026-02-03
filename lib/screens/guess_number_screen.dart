@@ -18,8 +18,10 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
 
   bool gameOver = false;
   bool isDead = false;
+  bool showGameOverPopup = false;
 
   int attemptsLeft = 5;
+  int? lastGuess;
 
   // Banner
   late BannerAd _bannerAd;
@@ -42,13 +44,8 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (!mounted) return;
-          setState(() => _isBannerLoaded = true);
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
+        onAdLoaded: (_) => setState(() => _isBannerLoaded = true),
+        onAdFailedToLoad: (ad, error) => ad.dispose(),
       ),
     )..load();
   }
@@ -62,9 +59,7 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
           _rewardedAd = ad;
           _isRewardedLoaded = true;
         },
-        onAdFailedToLoad: (error) {
-          _isRewardedLoaded = false;
-        },
+        onAdFailedToLoad: (_) => _isRewardedLoaded = false,
       ),
     );
   }
@@ -73,11 +68,21 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
     if (_rewardedAd == null) return;
 
     _rewardedAd!.show(
-      onUserEarnedReward: (ad, reward) {
+      onUserEarnedReward: (_, __) {
         setState(() {
           attemptsLeft = 3;
           isDead = false;
-          message = "🔥 Revived! 3 aur chances";
+          showGameOverPopup = false;
+
+          if (lastGuess != null) {
+            if (lastGuess! < target) {
+              message = "🔥 Revived! Bada number try karo";
+            } else if (lastGuess! > target) {
+              message = "🔥 Revived! Chhota number try karo";
+            }
+          } else {
+            message = "🔥 Revived! 3 aur chances";
+          }
         });
       },
     );
@@ -90,7 +95,7 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
     if (_rewardedAd == null) return;
 
     _rewardedAd!.show(
-      onUserEarnedReward: (ad, reward) async {
+      onUserEarnedReward: (_, __) async {
         await CoinManager.addCoins(30);
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -112,6 +117,8 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
       return;
     }
 
+    lastGuess = input;
+
     if (input == target) {
       await CoinManager.addCoins(20);
       setState(() {
@@ -124,7 +131,7 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
       if (attemptsLeft == 0) {
         setState(() {
           isDead = true;
-          message = "💀 Game Over! Chances khatam";
+          showGameOverPopup = true;
         });
       } else if (input < target) {
         setState(() => message = "Bada number try karo");
@@ -138,6 +145,8 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
     target = Random().nextInt(50) + 1;
     attemptsLeft = 5;
     isDead = false;
+    showGameOverPopup = false;
+    lastGuess = null;
     controller.clear();
     setState(() {
       message = "1 se 50 ke beech number guess karo";
@@ -161,88 +170,127 @@ class _GuessNumberScreenState extends State<GuessNumberScreen> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Row(
-                children: [
-                  const Text("🎯", style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 4),
-                  Text(
-                    attemptsLeft.toString(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Row(
+              children: [
+                const Text("🎯", style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 4),
+                Text(
+                  attemptsLeft.toString(),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      message,
-                      style: const TextStyle(fontSize: 20),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-
-                    SizedBox(
-                      width: 200,
-                      child: TextField(
-                        controller: controller,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        enabled: !isDead && !gameOver,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: "Enter number",
+            Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          message,
+                          style: const TextStyle(fontSize: 20),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: 200,
+                          child: TextField(
+                            controller: controller,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            enabled: !isDead && !gameOver,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: "Enter number",
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: checkGuess,
+                          child: const Text("CHECK"),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        if (gameOver && _isRewardedLoaded)
+                          ElevatedButton(
+                            onPressed: showRewardedBonus,
+                            child: const Text("Watch Ad & Get +30 Coins"),
+                          ),
+
+                        if (gameOver || isDead)
+                          TextButton(
+                            onPressed: resetGame,
+                            child: const Text("Play Again"),
+                          ),
+                      ],
                     ),
-
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: checkGuess,
-                      child: const Text("CHECK"),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    if (isDead && _isRewardedLoaded)
-                      ElevatedButton(
-                        onPressed: showRewardedRevive,
-                        child: const Text("Revive (Watch Ad)"),
-                      ),
-
-                    if (gameOver && _isRewardedLoaded)
-                      ElevatedButton(
-                        onPressed: showRewardedBonus,
-                        child: const Text("Watch Ad & Get +30 Coins"),
-                      ),
-
-                    if (gameOver || isDead)
-                      TextButton(
-                        onPressed: resetGame,
-                        child: const Text("Play Again"),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
+
+                if (_isBannerLoaded)
+                  SizedBox(
+                    height: _bannerAd.size.height.toDouble(),
+                    width: _bannerAd.size.width.toDouble(),
+                    child: AdWidget(ad: _bannerAd),
+                  ),
+              ],
             ),
 
-            if (_isBannerLoaded)
+            if (showGameOverPopup)
               Container(
-                height: _bannerAd.size.height.toDouble(),
-                width: _bannerAd.size.width.toDouble(),
-                child: AdWidget(ad: _bannerAd),
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          "💀 Game Over",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text("Chances khatam ho gaye"),
+                        const SizedBox(height: 20),
+
+                        if (_isRewardedLoaded)
+                          ElevatedButton(
+                            onPressed: showRewardedRevive,
+                            child: const Text("Revive (+3 Chances)"),
+                          ),
+
+                        const SizedBox(height: 10),
+
+                        OutlinedButton(
+                          onPressed: resetGame,
+                          child: const Text("Play Again"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
           ],
         ),

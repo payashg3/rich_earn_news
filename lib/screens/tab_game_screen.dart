@@ -204,9 +204,9 @@ class _TapGameScreenState extends State<TapGameScreen> {
                     const SizedBox(height: 20),
 
                     // Rewarded BEFORE start
-                    if (!isRunning && _rewardedAd != null)
+                    if (_rewardedAd != null)
                       ElevatedButton(
-                        onPressed: watchAdForExtraTime,
+                        onPressed: isRunning ? null : watchAdForExtraTime,
                         child: const Text("Watch Ad & +5 sec"),
                       ),
 
