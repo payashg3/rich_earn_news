@@ -262,7 +262,7 @@ class _SpinGameScreenState extends State<SpinGameScreen> {
             ),
 
             if (_isBannerLoaded)
-              Container(
+              SizedBox(
                 height: _bannerAd.size.height.toDouble(),
                 width: _bannerAd.size.width.toDouble(),
                 child: AdWidget(ad: _bannerAd),

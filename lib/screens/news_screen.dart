@@ -98,7 +98,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   void loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-9921766463937527/2727485396', // TEST
+      adUnitId: 'ca-app-pub-9921766463937527/2727485396', // TE
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
@@ -316,7 +316,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
                   // Bottom Banner
                   if (_isBannerLoaded)
-                    Container(
+                    SizedBox(
                       height: _bannerAd.size.height.toDouble(),
                       width: _bannerAd.size.width.toDouble(),
                       child: AdWidget(ad: _bannerAd),

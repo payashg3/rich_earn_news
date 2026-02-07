@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
-  final List screens = [NewsScreen(), GamesScreen()];
+  final List screens = [GamesScreen(), NewsScreen()];
 
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
@@ -69,11 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: "News"),
           BottomNavigationBarItem(
             icon: Icon(Icons.sports_esports),
             label: "Games",
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: "News"),
         ],
       ),
     );

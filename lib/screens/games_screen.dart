@@ -8,6 +8,7 @@ import 'guess_number_screen.dart';
 import 'scratch_and_win_game_screen.dart';
 import 'math_battle_screen.dart';
 import 'login_screen.dart';
+import 'color_mix_game_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -126,15 +127,15 @@ class _GamesScreenState extends State<GamesScreen> {
                       loadCoins();
                     },
                   ),
-                  gameCard(
-                    context,
-                    icon: Icons.ondemand_video,
-                    title: "Watch Ad",
-                    subtitle: "Earn Rewards",
-                    onTap: () {
-                      // yahan baad me rewarded ad lagaenge
-                    },
-                  ),
+                  // gameCard(
+                  //   context,
+                  //   icon: Icons.ondemand_video,
+                  //   title: "Watch Ad",
+                  //   subtitle: "Earn Rewards",
+                  //   onTap: () {
+                  //     // yahan baad me rewarded ad lagaenge
+                  //   },
+                  // ),
                   gameCard(
                     context,
                     icon: Icons.flash_on,
@@ -182,16 +183,24 @@ class _GamesScreenState extends State<GamesScreen> {
                   ),
                   gameCard(
                     context,
-                    icon: Icons.visibility,
-                    title: "Reaction Game",
-                    subtitle: "Green aate hi tap karo",
-                    onTap: () {},
+                    icon: Icons.color_lens,
+                    title: "Color Mix",
+                    subtitle: "Colors mix karke naya banao",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ColorMixGameScreen(),
+                        ),
+                      );
+                      loadCoins();
+                    },
                   ),
                 ],
               ),
             ),
             if (_isAdLoaded)
-              Container(
+              SizedBox(
                 height: _bannerAd.size.height.toDouble(),
                 width: _bannerAd.size.width.toDouble(),
                 child: AdWidget(ad: _bannerAd),
