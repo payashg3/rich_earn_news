@@ -9,6 +9,7 @@ import 'scratch_and_win_game_screen.dart';
 import 'math_battle_screen.dart';
 import 'login_screen.dart';
 import 'color_mix_game_screen.dart';
+import 'pattern_match_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -138,29 +139,14 @@ class _GamesScreenState extends State<GamesScreen> {
                   // ),
                   gameCard(
                     context,
-                    icon: Icons.flash_on,
-                    title: "Tap Challenge",
-                    subtitle: "10 sec me jitna tap ho sake",
+                    icon: Icons.psychology,
+                    title: "Pattern Panic",
+                    subtitle:"Can your brain keep up?",
                     onTap: () async {
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const TapGameScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.pin,
-                    title: "Number Guess",
-                    subtitle: "1–50 number guess karo",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GuessNumberScreen(),
+                          builder: (_) => const PatternMatchScreen(),
                         ),
                       );
                       loadCoins();
@@ -191,6 +177,36 @@ class _GamesScreenState extends State<GamesScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const ColorMixGameScreen(),
+                        ),
+                      );
+                      loadCoins();
+                    },
+                  ),
+                  gameCard(
+                    context,
+                    icon: Icons.flash_on,
+                    title: "Tap Challenge",
+                    subtitle: "10 sec me jitna tap ho sake",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TapGameScreen(),
+                        ),
+                      );
+                      loadCoins();
+                    },
+                  ),
+                  gameCard(
+                    context,
+                    icon: Icons.pin,
+                    title: "Number Guess",
+                    subtitle: "1–50 number guess karo",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const GuessNumberScreen(),
                         ),
                       );
                       loadCoins();

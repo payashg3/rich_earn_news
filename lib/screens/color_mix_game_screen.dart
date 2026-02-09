@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../utils/coin_manager.dart';
 
 class ColorMixGameScreen extends StatefulWidget {
   const ColorMixGameScreen({super.key});
@@ -11,29 +12,32 @@ class ColorMixGameScreen extends StatefulWidget {
 
 class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
   int level = 1;
-  int chancesLeft = 3;
-  List<Color> selectedColors = [];
+  int chancesLeft = 4;
+  int correctCount = 0;
+  int coins = 0;
 
+  List<Color> selectedColors = [];
   final Random random = Random();
 
-  // -------- COLORS --------
-  final List<Color> masterPalette = [
+  // ---------------- COLORS ----------------
+  final List<Color> allColors = [
     Colors.red,
     Colors.blue,
     Colors.yellow,
     Colors.green,
-    Colors.purple,
-  ];
-
-  final List<Color> possibleTargets = [
-    Colors.purple,
     Colors.orange,
-    Colors.green,
+    Colors.purple,
+    Colors.brown,
+    Colors.teal,
+    Colors.pink,
+    Colors.cyan,
+    Colors.indigo,
   ];
 
-  Color targetColor = Colors.purple;
+  late List<Color> currentPalette;
+  late Color targetColor;
 
-  // -------- ADS --------
+  // ---------------- ADS ----------------
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
   InterstitialAd? _interstitialAd;
@@ -42,17 +46,177 @@ class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
   @override
   void initState() {
     super.initState();
-    generateTarget();
+    generateNewRound();
     loadBanner();
     loadInterstitial();
     loadRewarded();
   }
 
-  void generateTarget() {
-    targetColor = possibleTargets[random.nextInt(possibleTargets.length)];
+  // ---------------- ROUND ----------------
+
+  void generateNewRound() {
+    selectedColors.clear();
+
+    currentPalette = List.from(allColors)..shuffle();
+    currentPalette = currentPalette.take(4).toList();
+
+    targetColor = getRandomValidTarget();
   }
 
-  // -------- ADS LOAD --------
+  Color getRandomValidTarget() {
+    List<Color> possible = [];
+
+    for (int i = 0; i < currentPalette.length; i++) {
+      for (int j = i + 1; j < currentPalette.length; j++) {
+        possible.add(mixColors(currentPalette[i], currentPalette[j]));
+      }
+    }
+
+    return possible[random.nextInt(possible.length)];
+  }
+
+  // ---------------- RGB MIX ----------------
+
+  Color mixColors(Color c1, Color c2) {
+    return Color.fromARGB(
+      255,
+      ((c1.red + c2.red) ~/ 2),
+      ((c1.green + c2.green) ~/ 2),
+      ((c1.blue + c2.blue) ~/ 2),
+    );
+  }
+
+  Color get mixedColor {
+    if (selectedColors.length < 2) return Colors.grey.shade300;
+    return mixColors(selectedColors[0], selectedColors[1]);
+  }
+
+  // ---------------- RESULT ----------------
+
+  void checkResult() async {
+    if (mixedColor.value == targetColor.value) {
+      correctCount++;
+
+      if (correctCount == 2) {
+        await giveLevelReward();
+        nextLevel();
+        return;
+      }
+    } else {
+      chancesLeft--;
+
+      if (chancesLeft == 0) {
+        showReviveDialog();
+        return;
+      }
+    }
+
+    generateNewRound();
+    setState(() {});
+  }
+
+  // ---------------- REWARD ----------------
+
+  Future<void> giveLevelReward() async {
+    int levelReward = 20;
+    coins += levelReward;
+    await CoinManager.addCoins(levelReward);
+  }
+
+  void nextLevel() {
+    setState(() {
+      level++;
+      chancesLeft = 4;
+      correctCount = 0;
+      generateNewRound();
+    });
+
+    if (level % 3 == 0 && _interstitialAd != null) {
+      _interstitialAd!.show();
+      _interstitialAd = null;
+      loadInterstitial();
+    }
+  }
+
+  void resetGame() {
+    setState(() {
+      level = 1;
+      chancesLeft = 4;
+      correctCount = 0;
+      coins = 0;
+      generateNewRound();
+    });
+  }
+
+  // ---------------- REVIVE ----------------
+
+  void showReviveDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("Out of Chances"),
+        content: const Text("Watch ad to revive?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              watchAdToRevive();
+            },
+            child: const Text("Revive"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              showGameOver();
+            },
+            child: const Text("Quit"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void watchAdToRevive() {
+    if (_rewardedAd == null) {
+      showGameOver();
+      return;
+    }
+
+    _rewardedAd!.show(
+      onUserEarnedReward: (_, __) {
+        setState(() {
+          chancesLeft = 4;
+        });
+      },
+    );
+
+    _rewardedAd = null;
+    loadRewarded();
+  }
+
+  void showGameOver() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("Game Over"),
+        content: Text("You reached Level $level\nCoins: $coins 🪙"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              resetGame();
+            },
+            child: const Text("Restart"),
+          )
+        ],
+      ),
+    );
+  }
+
+  // ---------------- ADS LOAD ----------------
+
   void loadBanner() {
     _bannerAd = BannerAd(
       adUnitId: 'ca-app-pub-9921766463937527/1197392241',
@@ -87,95 +251,8 @@ class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
     );
   }
 
-  // -------- MIX LOGIC --------
-  Color get mixedColor {
-    if (selectedColors.length < 2) return Colors.grey.shade300;
-    if (selectedColors.contains(Colors.red) &&
-        selectedColors.contains(Colors.blue))
-      return Colors.purple;
-    if (selectedColors.contains(Colors.red) &&
-        selectedColors.contains(Colors.yellow))
-      return Colors.orange;
-    if (selectedColors.contains(Colors.blue) &&
-        selectedColors.contains(Colors.yellow))
-      return Colors.green;
-    return Colors.brown;
-  }
+  // ---------------- UI ----------------
 
-  void checkResult() {
-    if (mixedColor == targetColor) {
-      nextLevel();
-    } else {
-      chancesLeft--;
-      selectedColors.clear();
-      if (chancesLeft == 0) showReviveDialog();
-      setState(() {});
-    }
-  }
-
-  void nextLevel() {
-    setState(() {
-      level++;
-      chancesLeft = 3;
-      selectedColors.clear();
-      generateTarget();
-    });
-
-    if (level % 3 == 0 && _interstitialAd != null) {
-      _interstitialAd!.show();
-      _interstitialAd = null;
-      loadInterstitial();
-    }
-  }
-
-  void showReviveDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text("Out of Chances"),
-        content: const Text("Watch ad to revive"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              watchAdToRevive();
-            },
-            child: const Text("Revive"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              resetGame();
-            },
-            child: const Text("Quit"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void watchAdToRevive() {
-    if (_rewardedAd == null) return;
-    _rewardedAd!.show(
-      onUserEarnedReward: (_, __) {
-        setState(() => chancesLeft = 3);
-      },
-    );
-    _rewardedAd = null;
-    loadRewarded();
-  }
-
-  void resetGame() {
-    setState(() {
-      level = 1;
-      chancesLeft = 3;
-      selectedColors.clear();
-      generateTarget();
-    });
-  }
-
-  // -------- UI --------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,26 +260,24 @@ class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
         title: const Text("Color Mix Lab"),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.restart_alt), onPressed: resetGame),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Center(child: Text("🪙 $coins")),
+          )
         ],
       ),
       body: Stack(
         children: [
-          // 🎮 GAME AREA (ALWAYS CENTERED)
           Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    "Level $level",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text("Chances: $chancesLeft ❤️"),
+                  Text("Level $level",
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text("Chances: $chancesLeft"),
+                  Text("Correct: $correctCount / 2"),
 
                   const SizedBox(height: 20),
 
@@ -230,15 +305,16 @@ class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
                   const SizedBox(height: 24),
 
                   Wrap(
-                    alignment: WrapAlignment.center,
                     spacing: 16,
-                    runSpacing: 16,
-                    children: masterPalette.map((color) {
+                    children: currentPalette.map((color) {
                       final isSelected = selectedColors.contains(color);
+
                       return GestureDetector(
                         onTap: () {
                           if (selectedColors.length == 2 || isSelected) return;
-                          setState(() => selectedColors.add(color));
+                          setState(() {
+                            selectedColors.add(color);
+                          });
                         },
                         child: Container(
                           height: 60,
@@ -261,17 +337,17 @@ class _ColorMixGameScreenState extends State<ColorMixGameScreen> {
                   const SizedBox(height: 24),
 
                   ElevatedButton(
-                    onPressed: selectedColors.length == 2 ? checkResult : null,
+                    onPressed:
+                        selectedColors.length == 2 ? checkResult : null,
                     child: const Text("MIX"),
                   ),
 
-                  const SizedBox(height: 80), // banner space
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
           ),
 
-          // 📢 BANNER (BOTTOM CENTER, SEPARATE)
           if (_isBannerLoaded)
             Align(
               alignment: Alignment.bottomCenter,
