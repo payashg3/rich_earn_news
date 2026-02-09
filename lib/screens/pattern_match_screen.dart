@@ -61,7 +61,7 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
 
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-9921766463937527/1591671153',
+      adUnitId: 'ca-app-pub-9921766463937527/4456178652',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -73,7 +73,7 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
 
   void loadRewarded() {
     RewardedAd.load(
-      adUnitId: 'ca-app-pub-9921766463937527/2208610648',
+      adUnitId: 'ca-app-pub-9921766463937527/6022112005',
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) => _rewardedAd = ad,
@@ -238,19 +238,22 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
               child: Text(
                 "🪙 $totalCoins",
                 style: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.bold),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: Column(
         children: [
           const SizedBox(height: 10),
 
-          Text("Level $level",
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(
+            "Level $level",
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
 
           Text("⏳ $timeLeft"),
 
@@ -274,11 +277,11 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
                       itemCount: options.length,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 1,
-                      ),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 1,
+                          ),
                       itemBuilder: (_, i) {
                         return GestureDetector(
                           onTap: () => checkAnswer(options[i]),
