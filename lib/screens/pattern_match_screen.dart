@@ -131,7 +131,7 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (timeLeft == 0) {
         t.cancel();
-        showGameOver(); // ⬅ timeout = game over
+        showGameOver(); // timeout = game over
       } else {
         setState(() => timeLeft--);
       }
@@ -154,6 +154,38 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
     }
   }
 
+  // ---------------- REVIVE - NEW FUNCTION ----------------
+  void reviveGame() {
+    // Cancel existing timer
+    timer?.cancel();
+    
+    // Same level maintain karo
+    // showPattern = true; (already handled in generateLevel)
+    timeLeft = 5; // Fresh 5 seconds
+    
+    // Same pattern size ka naya pattern
+    int patternSize = math.min(6 + level, 12);
+    correctPattern = List.generate(
+      patternSize,
+      (_) => baseColors[random.nextInt(baseColors.length)],
+    );
+    
+    generateOptions();
+    
+    setState(() {
+      showPattern = true;
+    });
+    
+    // 3 seconds baad pattern hide karo aur fresh timer start
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() {
+        showPattern = false;
+      });
+      startTimer(); // Fresh timer 5 sec se
+    });
+  }
+
   // ---------------- GAME OVER ----------------
 
   void showGameOver() {
@@ -167,7 +199,7 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              resetGame();
+              resetGame(); // Complete reset to Level 1
             },
             child: const Text("Quit"),
           ),
@@ -178,8 +210,7 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
 
                 _rewardedAd!.show(
                   onUserEarnedReward: (_, __) {
-                    level = math.max(1, level - 1);
-                    generateLevel();
+                    reviveGame(); // Same level revive
                   },
                 );
 
@@ -193,9 +224,12 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
     );
   }
 
+  // ---------------- RESET ----------------
   void resetGame() {
-    level = 1;
-    generateLevel();
+    timer?.cancel();
+    if (mounted) {
+      Navigator.of(context).pop(); 
+    }
   }
 
   // ---------------- GRID ----------------
@@ -238,22 +272,19 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
               child: Text(
                 "🪙 $totalCoins",
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
-          ),
+          )
         ],
       ),
       body: Column(
         children: [
           const SizedBox(height: 10),
 
-          Text(
-            "Level $level",
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
+          Text("Level $level",
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
 
           Text("⏳ $timeLeft"),
 
@@ -277,11 +308,11 @@ class _PatternMatchScreenState extends State<PatternMatchScreen> {
                       itemCount: options.length,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: 1,
-                          ),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 1,
+                      ),
                       itemBuilder: (_, i) {
                         return GestureDetector(
                           onTap: () => checkAnswer(options[i]),
