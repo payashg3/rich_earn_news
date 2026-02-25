@@ -10,6 +10,9 @@ import 'math_battle_screen.dart';
 import 'login_screen.dart';
 import 'color_mix_game_screen.dart';
 import 'pattern_match_screen.dart';
+import 'tab_shoot_game.dart';
+import 'dodge_block_game.dart';
+import 'auto_sword_slash_game.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -141,7 +144,7 @@ class _GamesScreenState extends State<GamesScreen> {
                     context,
                     icon: Icons.psychology,
                     title: "Pattern Panic",
-                    subtitle:"Can your brain keep up?",
+                    subtitle: "Can your brain keep up?",
                     onTap: () async {
                       await Navigator.push(
                         context,
@@ -207,6 +210,49 @@ class _GamesScreenState extends State<GamesScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const GuessNumberScreen(),
+                        ),
+                      );
+                      loadCoins();
+                    },
+                  ),
+                  gameCard(
+                    context,
+                    icon: Icons.pin,
+                    title: "Shoot the Enemy",
+                    subtitle: "Shoot in 1 fire",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => TapShootGame()),
+                      );
+                      loadCoins();
+                    },
+                  ),
+                  gameCard(
+                    context,
+                    icon: Icons.pin,
+                    title: "Dogde the Blocks",
+                    subtitle: "Avoid falling blocks",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DodgeBlocksGame(),
+                        ),
+                      );
+                      loadCoins();
+                    },
+                  ),
+                  gameCard(
+                    context,
+                    icon: Icons.pin,
+                    title: "Auto Sword Slash",
+                    subtitle: "Swipe to slash enemies",
+                    onTap: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AutoSwordSlashGame(),
                         ),
                       );
                       loadCoins();
