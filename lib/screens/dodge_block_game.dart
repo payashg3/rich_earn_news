@@ -1,15 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: DodgeBlocksGame(),
-    ),
-  );
-}
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class DodgeBlocksGame extends StatefulWidget {
   const DodgeBlocksGame({super.key});
@@ -20,7 +12,9 @@ class DodgeBlocksGame extends StatefulWidget {
 
 class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
   double playerX = 0;
-  List<_Block> blocks = [];
+  double playerWidth = 60;
+
+  List<_FallingItem> items = [];
 
   Timer? gameLoop;
   Timer? spawnLoop;
@@ -28,55 +22,135 @@ class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
   double speed = 0.015;
   int score = 0;
   bool gameOver = false;
+  bool invincible = false;
+
+  InterstitialAd? _interstitialAd;
+
+  final Random random = Random();
 
   @override
   void initState() {
     super.initState();
+    _loadAd();
     startGame();
+  }
+
+  void _loadAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-9921766463937527/8964915639',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitialAd = ad,
+        onAdFailedToLoad: (error) {},
+      ),
+    );
+  }
+
+  void _showAd() {
+    _interstitialAd?.show();
+    _interstitialAd?.dispose();
+    _loadAd();
   }
 
   void startGame() {
     gameLoop?.cancel();
     spawnLoop?.cancel();
 
-    blocks.clear();
+    items.clear();
     speed = 0.015;
     score = 0;
     gameOver = false;
+    invincible = false;
+    playerWidth = 60;
 
-    // Spawn blocks
-    spawnLoop = Timer.periodic(const Duration(milliseconds: 800), (_) {
+    spawnLoop = Timer.periodic(const Duration(milliseconds: 700), (_) {
       if (!gameOver) {
-        blocks.add(_Block(x: Random().nextDouble() * 2 - 1, y: -1));
+        items.add(
+          _FallingItem(
+            x: random.nextDouble() * 2 - 1,
+            y: -1,
+            type: _randomType(),
+          ),
+        );
       }
     });
 
-    // Game loop
     gameLoop = Timer.periodic(const Duration(milliseconds: 30), (_) {
+      if (gameOver) return;
+
       setState(() {
-        for (var block in blocks) {
-          block.y += speed;
-        }
+        for (int i = items.length - 1; i >= 0; i--) {
+          final item = items[i];
 
-        // Remove off screen blocks
-        blocks.removeWhere((block) => block.y > 1);
+          item.y += speed;
 
-        // Collision detection
-        for (var block in blocks) {
-          if ((block.y - 0.9).abs() < 0.1 && (block.x - playerX).abs() < 0.2) {
-            gameOver = true;
-            gameLoop?.cancel();
-            spawnLoop?.cancel();
+          // Collision
+          if ((item.y - 0.9).abs() < 0.1 &&
+              (item.x - playerX).abs() < (playerWidth / 200)) {
+            handleCollision(item);
+            items.removeAt(i);
+            continue;
+          }
+
+          // Successful Dodge
+          if (item.y > 1) {
+            if (item.type == "block") {
+              score++; // ✅ score only when block dodged
+            }
+            items.removeAt(i);
           }
         }
 
-        // Increase difficulty gradually
-        score++;
-        if (score % 200 == 0) {
-          speed += 0.002;
+        // Gradual difficulty
+        if (score != 0 && score % 10 == 0) {
+          speed += 0.001;
         }
       });
     });
+  }
+
+  String _randomType() {
+    double r = random.nextDouble();
+    if (r < 0.65) return "block";
+    if (r < 0.75) return "slow";
+    if (r < 0.85) return "fast";
+    if (r < 0.92) return "invincible";
+    if (r < 0.96) return "big";
+    return "small";
+  }
+
+  void handleCollision(_FallingItem item) {
+    if (item.type == "block") {
+      if (!invincible) {
+        gameOver = true;
+        _showAd();
+      }
+    } else if (item.type == "slow") {
+      speed *= 0.5;
+      Future.delayed(const Duration(seconds: 5), () {
+        speed = 0.02;
+      });
+    } else if (item.type == "fast") {
+      speed *= 1.8;
+      Future.delayed(const Duration(seconds: 5), () {
+        speed = 0.02;
+      });
+    } else if (item.type == "invincible") {
+      invincible = true;
+      Future.delayed(const Duration(seconds: 5), () {
+        invincible = false;
+      });
+    } else if (item.type == "big") {
+      playerWidth = 100;
+      Future.delayed(const Duration(seconds: 5), () {
+        playerWidth = 60;
+      });
+    } else if (item.type == "small") {
+      playerWidth = 35;
+      Future.delayed(const Duration(seconds: 5), () {
+        playerWidth = 60;
+      });
+    }
   }
 
   void resetGame() {
@@ -87,6 +161,7 @@ class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
   void dispose() {
     gameLoop?.cancel();
     spawnLoop?.cancel();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -98,40 +173,50 @@ class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
         onPanUpdate: (details) {
           setState(() {
             playerX += details.delta.dx / MediaQuery.of(context).size.width * 2;
-
-            if (playerX > 1) playerX = 1;
-            if (playerX < -1) playerX = -1;
+            playerX = playerX.clamp(-1, 1);
           });
         },
         child: Stack(
           children: [
-            // Player
+            // Roller Player
             Align(
               alignment: Alignment(playerX, 0.9),
               child: Container(
-                width: 50,
-                height: 50,
+                width: playerWidth,
+                height: 25,
                 decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(8),
+                  color: invincible ? Colors.yellow : Colors.blue,
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
             ),
 
-            // Blocks
-            ...blocks.map(
-              (block) => Align(
-                alignment: Alignment(block.x, block.y),
-                child: Container(width: 40, height: 40, color: Colors.red),
-              ),
-            ),
+            // Falling Items
+            ...items.map((item) {
+              String emoji = item.type == "block"
+                  ? "🟥"
+                  : item.type == "slow"
+                  ? "🐢"
+                  : item.type == "fast"
+                  ? "⚡"
+                  : item.type == "invincible"
+                  ? "🛡"
+                  : item.type == "big"
+                  ? "⬆️"
+                  : "⬇️";
+
+              return Align(
+                alignment: Alignment(item.x, item.y),
+                child: Text(emoji, style: const TextStyle(fontSize: 28)),
+              );
+            }),
 
             // Score
             Positioned(
               top: 60,
               left: 20,
               child: Text(
-                "Time: ${score ~/ 30}s",
+                "Score: $score",
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -155,7 +240,7 @@ class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Survived: ${score ~/ 30} sec",
+                      "Final Score: $score",
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 18,
@@ -176,9 +261,10 @@ class _DodgeBlocksGameState extends State<DodgeBlocksGame> {
   }
 }
 
-class _Block {
+class _FallingItem {
   double x;
   double y;
+  String type;
 
-  _Block({required this.x, required this.y});
+  _FallingItem({required this.x, required this.y, required this.type});
 }

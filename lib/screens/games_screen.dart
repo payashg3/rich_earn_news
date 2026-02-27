@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../utils/coin_manager.dart';
+
 import 'spin_game_screen.dart';
 import 'scratch_and_win_game_screen.dart';
 import 'guess_number_screen.dart';
@@ -12,6 +12,7 @@ import 'pattern_match_screen.dart';
 import 'tab_shoot_game.dart';
 import 'dodge_block_game.dart';
 import 'auto_sword_slash_game.dart';
+import 'tab_game_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -32,11 +33,12 @@ class _GamesScreenState extends State<GamesScreen>
     super.initState();
     loadCoins();
 
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 800));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
     _controller.forward();
   }
@@ -61,11 +63,7 @@ class _GamesScreenState extends State<GamesScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F2027),
-              Color(0xFF203A43),
-              Color(0xFF2C5364),
-            ],
+            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -93,7 +91,9 @@ class _GamesScreenState extends State<GamesScreen>
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
@@ -101,24 +101,25 @@ class _GamesScreenState extends State<GamesScreen>
                             child: Text(
                               coins == -1 ? "..." : "$coins 🪙",
                               style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.logout,
-                                color: Colors.white),
+                            icon: const Icon(Icons.logout, color: Colors.white),
                             onPressed: () async {
                               await FirebaseAuth.instance.signOut();
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (_) => LoginScreen()),
+                                  builder: (_) => const LoginScreen(),
+                                ),
                               );
                             },
-                          )
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -128,18 +129,66 @@ class _GamesScreenState extends State<GamesScreen>
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      buildGameCard(Icons.casino, "Spin & Win",
-                          "Spin the wheel", const SpinGameScreen()),
-                      buildGameCard(Icons.card_giftcard, "Scratch & Win",
-                          "Scratch the card", const ScratchGameScreen()),
-                      buildGameCard(Icons.psychology, "Pattern Panic",
-                          "Test your memory", const PatternMatchScreen()),
-                      buildGameCard(Icons.calculate, "Math Battle",
-                          "Fast math quiz", const MathBattleScreen()),
-                      buildGameCard(Icons.color_lens, "Color Mix",
-                          "Create new colors", const ColorMixGameScreen()),
-                      buildGameCard(Icons.pin, "Number Guess",
-                          "Guess 1-50 number", const GuessNumberScreen()),
+                      buildGameCard(
+                        Icons.casino,
+                        "Spin & Win",
+                        "Spin the wheel",
+                        const SpinGameScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.card_giftcard,
+                        "Scratch & Win",
+                        "Scratch the card",
+                        const ScratchGameScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.psychology,
+                        "Pattern Panic",
+                        "Test your memory",
+                        const PatternMatchScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.calculate,
+                        "Math Battle",
+                        "Fast math quiz",
+                        const MathBattleScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.color_lens,
+                        "Color Mix",
+                        "Create new colors",
+                        const ColorMixGameScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.flash_on,
+                        "Tap Challenge",
+                        "10 sec me jitna tap ho sake",
+                        const TapGameScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.pin,
+                        "Number Guess",
+                        "Guess 1-50 number",
+                        const GuessNumberScreen(),
+                      ),
+                      buildGameCard(
+                        Icons.gps_fixed,
+                        "Shoot the Enemy",
+                        "Auto fire shooting",
+                        TapShootGame(),
+                      ),
+                      buildGameCard(
+                        Icons.grid_on,
+                        "Dodge the Blocks",
+                        "Avoid falling blocks",
+                        const DodgeBlocksGame(),
+                      ),
+                      buildGameCard(
+                        Icons.sports_martial_arts,
+                        "Auto Sword Slash",
+                        "Swipe to slash enemies",
+                        const AutoSwordSlashGame(),
+                      ),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -153,7 +202,11 @@ class _GamesScreenState extends State<GamesScreen>
   }
 
   Widget buildGameCard(
-      IconData icon, String title, String subtitle, Widget screen) {
+    IconData icon,
+    String title,
+    String subtitle,
+    Widget screen,
+  ) {
     return GestureDetector(
       onTap: () async {
         await Navigator.push(
@@ -178,176 +231,24 @@ class _GamesScreenState extends State<GamesScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  Text(subtitle,
-                      style: const TextStyle(color: Colors.white70)),
-                  gameCard(
-                    context,
-                    icon: Icons.casino,
-                    title: "Spin & Win",
-                    subtitle: "Spin the wheel",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SpinGameScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.card_giftcard,
-                    title: "Scratch & Win",
-                    subtitle: "Scratch the Card",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ScratchGameScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  // gameCard(
-                  //   context,
-                  //   icon: Icons.ondemand_video,
-                  //   title: "Watch Ad",
-                  //   subtitle: "Earn Rewards",
-                  //   onTap: () {
-                  //     // yahan baad me rewarded ad lagaenge
-                  //   },
-                  // ),
-                  gameCard(
-                    context,
-                    icon: Icons.psychology,
-                    title: "Pattern Panic",
-                    subtitle: "Can your brain keep up?",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PatternMatchScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.calculate,
-                    title: "Math Battle",
-                    subtitle: "Fast math questions",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MathBattleScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.color_lens,
-                    title: "Color Mix",
-                    subtitle: "Colors mix karke naya banao",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ColorMixGameScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.flash_on,
-                    title: "Tap Challenge",
-                    subtitle: "10 sec me jitna tap ho sake",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const TapGameScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.pin,
-                    title: "Number Guess",
-                    subtitle: "1–50 number guess karo",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GuessNumberScreen(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.pin,
-                    title: "Shoot the Enemy",
-                    subtitle: "Shoot in 1 fire",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => TapShootGame()),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.pin,
-                    title: "Dogde the Blocks",
-                    subtitle: "Avoid falling blocks",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DodgeBlocksGame(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
-                  gameCard(
-                    context,
-                    icon: Icons.pin,
-                    title: "Auto Sword Slash",
-                    subtitle: "Swipe to slash enemies",
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AutoSwordSlashGame(),
-                        ),
-                      );
-                      loadCoins();
-                    },
-                  ),
+                  Text(subtitle, style: const TextStyle(color: Colors.white70)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios,
-                color: Colors.white70, size: 18)
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 18,
+            ),
           ],
         ),
       ),

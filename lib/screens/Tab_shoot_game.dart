@@ -1,12 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(
-    const MaterialApp(debugShowCheckedModeBanner: false, home: TapShootGame()),
-  );
-}
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class TapShootGame extends StatefulWidget {
   const TapShootGame({super.key});
@@ -17,91 +12,173 @@ class TapShootGame extends StatefulWidget {
 
 class _TapShootGameState extends State<TapShootGame> {
   double playerX = 0;
-  double enemyX = 0;
-  double enemyY = -1;
 
+  List<_FallingObject> objects = [];
   List<double> bullets = [];
+  List<_Explosion> explosions = [];
 
   int score = 0;
   bool gameOver = false;
+  bool doubleGun = false;
 
   Timer? gameLoop;
   Timer? fireLoop;
 
+  final Random random = Random();
   double enemySpeed = 0.02;
+
+  InterstitialAd? _interstitialAd;
 
   @override
   void initState() {
     super.initState();
+    _loadAd();
     startGame();
+  }
+
+  void _loadAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-9921766463937527/2271514778',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitialAd = ad,
+        onAdFailedToLoad: (error) {},
+      ),
+    );
+  }
+
+  void _showAd() {
+    _interstitialAd?.show();
+    _interstitialAd?.dispose();
+    _loadAd();
   }
 
   void startGame() {
     gameLoop?.cancel();
     fireLoop?.cancel();
 
-    enemyX = Random().nextDouble() * 2 - 1;
-    enemyY = -1;
+    objects.clear();
+    bullets.clear();
+    explosions.clear();
+    score = 0;
+    gameOver = false;
+    enemySpeed = 0.02;
+    doubleGun = false;
 
-    // Auto Fire every 300ms
     fireLoop = Timer.periodic(const Duration(milliseconds: 300), (_) {
-      if (!gameOver) {
+      if (!gameOver && bullets.length < 10) {
         bullets.add(0.8);
+        if (doubleGun) bullets.add(0.75);
       }
     });
 
     gameLoop = Timer.periodic(const Duration(milliseconds: 30), (_) {
-      setState(() {
-        enemyY += enemySpeed;
+      if (gameOver) return;
 
-        // Move bullets
-        for (int i = 0; i < bullets.length; i++) {
-          bullets[i] -= 0.05;
+      setState(() {
+        if (objects.length < 7 && random.nextDouble() < 0.03) {
+          objects.add(
+            _FallingObject(
+              x: random.nextDouble() * 2 - 1,
+              y: -1,
+              type: _randomType(),
+            ),
+          );
         }
 
-        bullets.removeWhere((b) => b < -1);
+        // Move objects
+        for (var obj in objects) {
+          if (obj.type == "enemy" && obj.isFrozen) continue;
+          obj.y += enemySpeed;
+        }
 
-        // Collision check
-        bullets.removeWhere((bulletY) {
-          if ((enemyY - bulletY).abs() < 0.1 &&
-              (enemyX - playerX).abs() < 0.2) {
-            score++;
-            enemyY = -1;
-            enemyX = Random().nextDouble() * 2 - 1;
+        // Move bullets
+        for (int i = bullets.length - 1; i >= 0; i--) {
+          bullets[i] -= 0.05;
+          if (bullets[i] < -1) bullets.removeAt(i);
+        }
 
-            if (score % 5 == 0) {
-              enemySpeed += 0.005;
-            }
+        // Collision
+        for (int i = objects.length - 1; i >= 0; i--) {
+          final obj = objects[i];
 
-            return true;
+          // Catch detection
+          if ((obj.y - 0.9).abs() < 0.1 && (obj.x - playerX).abs() < 0.2) {
+            handleCatch(obj);
+            continue;
           }
-          return false;
-        });
 
-        if (enemyY > 1) {
-          gameOver = true;
-          gameLoop?.cancel();
-          fireLoop?.cancel();
+          // Bullet collision (enemy only)
+          if (obj.type == "enemy") {
+            for (int j = bullets.length - 1; j >= 0; j--) {
+              if ((obj.y - bullets[j]).abs() < 0.1 &&
+                  (obj.x - playerX).abs() < 0.2) {
+                score++;
+                explosions.add(_Explosion(obj.x, obj.y));
+                objects.removeAt(i);
+                bullets.removeAt(j);
+                break;
+              }
+            }
+          }
+
+          if (obj.y > 1) objects.removeAt(i);
+        }
+
+        // Animate explosions
+        explosions.removeWhere((e) => e.size > 40);
+        for (var e in explosions) {
+          e.size += 2;
         }
       });
     });
   }
 
-  void resetGame() {
-    setState(() {
-      score = 0;
-      gameOver = false;
-      enemySpeed = 0.02;
-      bullets.clear();
-    });
+  String _randomType() {
+    double r = random.nextDouble();
+    if (r < 0.7) return "enemy";
+    if (r < 0.85) return "double";
+    if (r < 0.95) return "freeze";
+    return "bomb";
+  }
 
-    startGame();
+  void handleCatch(_FallingObject obj) {
+    if (obj.type == "double") {
+      doubleGun = true;
+      Future.delayed(const Duration(seconds: 5), () => doubleGun = false);
+    } else if (obj.type == "freeze") {
+      // Freeze only currently visible enemies
+      for (var o in objects) {
+        if (o.type == "enemy") {
+          o.isFrozen = true;
+        }
+      }
+
+      Future.delayed(const Duration(seconds: 5), () {
+        for (var o in objects) {
+          o.isFrozen = false;
+        }
+      });
+    } else if (obj.type == "bomb") {
+      explosions.add(_Explosion(playerX, 0.9));
+      gameOver = true;
+      _showAd();
+    }
+
+    objects.remove(obj);
+  }
+
+  void restartGame() {
+    setState(() {
+      startGame();
+    });
   }
 
   @override
   void dispose() {
     gameLoop?.cancel();
     fireLoop?.cancel();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -113,48 +190,52 @@ class _TapShootGameState extends State<TapShootGame> {
         onPanUpdate: (details) {
           setState(() {
             playerX += details.delta.dx / MediaQuery.of(context).size.width * 2;
-
-            if (playerX > 1) playerX = 1;
-            if (playerX < -1) playerX = -1;
+            playerX = playerX.clamp(-1, 1);
           });
         },
         child: Stack(
           children: [
-            // Player
             Align(
               alignment: Alignment(playerX, 0.9),
-              child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
+              child: Container(width: 50, height: 30, color: Colors.blue),
             ),
 
-            // Enemy
-            Align(
-              alignment: Alignment(enemyX, enemyY),
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-            ),
+            ...objects.map((obj) {
+              String emoji = obj.type == "enemy"
+                  ? (obj.isFrozen ? "🧊" : "👾")
+                  : obj.type == "double"
+                  ? "⚡"
+                  : obj.type == "freeze"
+                  ? "❄️"
+                  : "💣";
 
-            // Bullets
+              return Align(
+                alignment: Alignment(obj.x, obj.y),
+                child: Text(emoji, style: const TextStyle(fontSize: 30)),
+              );
+            }),
+
             ...bullets.map(
-              (bulletY) => Align(
-                alignment: Alignment(playerX, bulletY),
-                child: Container(width: 6, height: 18, color: Colors.yellow),
+              (b) => Align(
+                alignment: Alignment(playerX, b),
+                child: const Icon(Icons.circle, size: 8, color: Colors.yellow),
               ),
             ),
 
-            // Score
+            ...explosions.map(
+              (e) => Align(
+                alignment: Alignment(e.x, e.y),
+                child: Container(
+                  width: e.size,
+                  height: e.size,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.orange.withOpacity(0.6),
+                  ),
+                ),
+              ),
+            ),
+
             Positioned(
               top: 60,
               left: 20,
@@ -170,31 +251,9 @@ class _TapShootGameState extends State<TapShootGame> {
 
             if (gameOver)
               Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "GAME OVER",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Final Score: $score",
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: resetGame,
-                      child: const Text("Restart"),
-                    ),
-                  ],
+                child: ElevatedButton(
+                  onPressed: restartGame,
+                  child: const Text("Restart"),
                 ),
               ),
           ],
@@ -202,4 +261,21 @@ class _TapShootGameState extends State<TapShootGame> {
       ),
     );
   }
+}
+
+class _FallingObject {
+  double x;
+  double y;
+  String type;
+  bool isFrozen = false;
+
+  _FallingObject({required this.x, required this.y, required this.type});
+}
+
+class _Explosion {
+  double x;
+  double y;
+  double size = 10;
+
+  _Explosion(this.x, this.y);
 }

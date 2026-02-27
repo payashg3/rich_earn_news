@@ -1,15 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: AutoSwordSlashGame(),
-    ),
-  );
-}
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AutoSwordSlashGame extends StatefulWidget {
   const AutoSwordSlashGame({super.key});
@@ -18,75 +10,116 @@ class AutoSwordSlashGame extends StatefulWidget {
   State<AutoSwordSlashGame> createState() => _AutoSwordSlashGameState();
 }
 
-class _AutoSwordSlashGameState extends State<AutoSwordSlashGame> {
-  String enemySide = "left"; // left or right
+class _AutoSwordSlashGameState extends State<AutoSwordSlashGame>
+    with SingleTickerProviderStateMixin {
+  String enemySide = "left";
   double enemyPosition = -1;
+  String enemyType = "enemy";
 
   int score = 0;
   int lives = 3;
   bool gameOver = false;
 
-  Timer? gameLoop;
   double speed = 0.02;
+  Timer? gameLoop;
+
+  InterstitialAd? _interstitialAd;
+
+  bool showSlash = false;
+  String slashSide = "left";
 
   @override
   void initState() {
     super.initState();
+    _loadAd();
     spawnEnemy();
     startGame();
+  }
+
+  void _loadAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-9921766463937527/1949390659',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) => _interstitialAd = ad,
+        onAdFailedToLoad: (_) {},
+      ),
+    );
+  }
+
+  void _showAd() {
+    _interstitialAd?.show();
+    _interstitialAd?.dispose();
+    _loadAd();
   }
 
   void spawnEnemy() {
     enemySide = Random().nextBool() ? "left" : "right";
     enemyPosition = -1;
+    enemyType = Random().nextDouble() < 0.2 ? "bomb" : "enemy";
   }
 
   void startGame() {
     gameLoop?.cancel();
 
     gameLoop = Timer.periodic(const Duration(milliseconds: 30), (_) {
+      if (gameOver) return;
+
       setState(() {
         enemyPosition += speed;
 
-        if (enemyPosition > 0.8) {
-          lives--;
+        if (enemyPosition > 0.85) {
+          if (enemyType == "enemy") {
+            lives--;
+          }
+          spawnEnemy();
+
           if (lives <= 0) {
             gameOver = true;
             gameLoop?.cancel();
-          } else {
-            spawnEnemy();
+            _showAd();
           }
+        }
+
+        if (score != 0 && score % 5 == 0) {
+          speed += 0.0005;
         }
       });
     });
   }
 
-  void handleSwipe(DragEndDetails details) {
+  void handleTap(TapUpDetails details) {
     if (gameOver) return;
 
-    double velocity = details.primaryVelocity ?? 0;
+    double tapX = details.localPosition.dx;
+    double screenWidth = MediaQuery.of(context).size.width;
+    String tapSide = tapX < screenWidth / 2 ? "left" : "right";
 
-    String swipeDirection = velocity > 0 ? "right" : "left";
+    setState(() {
+      showSlash = true;
+      slashSide = tapSide;
+    });
 
-    if (swipeDirection == enemySide) {
+    Future.delayed(const Duration(milliseconds: 150), () {
       setState(() {
+        showSlash = false;
+      });
+    });
+
+    if (tapSide == enemySide) {
+      if (enemyType == "enemy") {
         score++;
-        spawnEnemy();
-
-        if (score % 5 == 0) {
-          speed += 0.005;
-        }
-      });
-    } else {
-      setState(() {
+      } else {
         lives--;
-        if (lives <= 0) {
-          gameOver = true;
-          gameLoop?.cancel();
-        } else {
-          spawnEnemy();
-        }
-      });
+      }
+
+      spawnEnemy();
+
+      if (lives <= 0) {
+        gameOver = true;
+        gameLoop?.cancel();
+        _showAd();
+      }
     }
   }
 
@@ -105,7 +138,27 @@ class _AutoSwordSlashGameState extends State<AutoSwordSlashGame> {
   @override
   void dispose() {
     gameLoop?.cancel();
+    _interstitialAd?.dispose();
     super.dispose();
+  }
+
+  Widget buildSlashEffect() {
+    return Align(
+      alignment: Alignment(slashSide == "left" ? -0.8 : 0.8, 0.7),
+      child: Transform.rotate(
+        angle: -0.7,
+        child: Container(
+          width: 120,
+          height: 8,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Colors.white, Colors.redAccent],
+            ),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -113,26 +166,22 @@ class _AutoSwordSlashGameState extends State<AutoSwordSlashGame> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        onHorizontalDragEnd: handleSwipe,
+        onTapUp: handleTap,
         child: Stack(
           children: [
-            // Enemy
             Align(
               alignment: Alignment(
                 enemySide == "left" ? -0.8 : 0.8,
                 enemyPosition,
               ),
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              child: Text(
+                enemyType == "enemy" ? "👹" : "💣",
+                style: const TextStyle(fontSize: 50),
               ),
             ),
 
-            // Score
+            if (showSlash) buildSlashEffect(),
+
             Positioned(
               top: 60,
               left: 20,
@@ -146,7 +195,6 @@ class _AutoSwordSlashGameState extends State<AutoSwordSlashGame> {
               ),
             ),
 
-            // Lives
             Positioned(
               top: 60,
               right: 20,
