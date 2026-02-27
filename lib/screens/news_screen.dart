@@ -196,64 +196,116 @@ class _NewsScreenState extends State<NewsScreen> {
   }
 
   // ---------------- UI ----------------
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("RichEarn News"),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Text(
-                "$coins 🪙",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => LoginScreen()),
-              );
-            },
-          ),
-        ],
+  
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF0F2027),
+            Color(0xFF203A43),
+            Color(0xFF2C5364),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: Column(
+      child: SafeArea(
+        child: loading
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.amber),
+              )
+            : Column(
                 children: [
+                  // 🔥 Custom Top Bar
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "RichEarn News",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "$coins 🪙",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.logout,
+                                  color: Colors.white),
+                              onPressed: () async {
+                                await FirebaseAuth.instance.signOut();
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => LoginScreen()),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 📰 News List
                   Expanded(
                     child: RefreshIndicator(
+                      color: Colors.amber,
                       onRefresh: fetchNews,
                       child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: newsList.length,
                         itemBuilder: (context, index) {
                           final item = newsList[index];
 
-                          return Card(
-                            margin: const EdgeInsets.all(12),
+                          return AnimatedContainer(
+                            duration: Duration(milliseconds: 400 + (index * 100)),
+                            curve: Curves.easeOut,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.2)),
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (item["image"] != null)
-                                  Image.network(
-                                    item["image"],
-                                    height: 200,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(20)),
+                                    child: Image.network(
+                                      item["image"],
+                                      height: 200,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
+
                                 Padding(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(16),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -263,27 +315,31 @@ class _NewsScreenState extends State<NewsScreen> {
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 8),
                                       Text(
                                         item["description"] ?? "",
                                         maxLines: 3,
                                         overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                            color: Colors.white70),
                                       ),
-                                      const SizedBox(height: 12),
+                                      const SizedBox(height: 14),
+
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           const Text(
-                                            "+10 Coins 🪙",
+                                            "+5 Coins 🪙",
                                             style: TextStyle(
-                                              color: Colors.green,
+                                              color: Colors.greenAccent,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          TextButton(
+                                          ElevatedButton(
                                             onPressed: () async {
                                               await addCoins();
                                               readCount++;
@@ -299,7 +355,18 @@ class _NewsScreenState extends State<NewsScreen> {
                                                 ),
                                               );
                                             },
-                                            child: const Text("Read"),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.amber,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: const Text(
+                                              "Read",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -314,7 +381,7 @@ class _NewsScreenState extends State<NewsScreen> {
                     ),
                   ),
 
-                  // Bottom Banner
+                  // 📢 Bottom Banner
                   if (_isBannerLoaded)
                     SizedBox(
                       height: _bannerAd.size.height.toDouble(),
@@ -323,7 +390,8 @@ class _NewsScreenState extends State<NewsScreen> {
                     ),
                 ],
               ),
-            ),
-    );
-  }
+      ),
+    ),
+  );
+}
 }
