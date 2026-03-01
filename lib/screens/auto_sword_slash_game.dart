@@ -165,6 +165,18 @@ class _AutoSwordSlashGameState extends State<AutoSwordSlashGame>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 92, 123, 98),
+        elevation: 0,
+        toolbarHeight: 35,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            gameLoop?.cancel();   // stop game loop
+            Navigator.pop(context); // go back
+          },
+        ),
+      ),
       body: GestureDetector(
         onTapUp: handleTap,
         child: Stack(
