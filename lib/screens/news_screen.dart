@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_screen.dart';
 import 'article_screen.dart';
 import '../utils/coin_manager.dart';
+import 'wallet_screen.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,14 +22,12 @@ class _NewsScreenState extends State<NewsScreen> {
   bool loading = true;
   int coins = 0;
 
-  // Ads
   late BannerAd _bannerAd;
   bool _isBannerLoaded = false;
   InterstitialAd? _interstitialAd;
 
   int readCount = 0;
 
-  // Dummy fallback
   List dummyNews = [
     {
       "title": "भारत में AI से बदलेगा पढ़ाई का तरीका",
@@ -54,8 +53,6 @@ class _NewsScreenState extends State<NewsScreen> {
     loadReadCount();
   }
 
-  // ---------------- COINS ----------------
-
   void loadCoins() async {
     final c = await CoinManager.getCoins();
     if (!mounted) return;
@@ -67,8 +64,6 @@ class _NewsScreenState extends State<NewsScreen> {
     loadCoins();
   }
 
-  // ---------------- READ COUNT ----------------
-
   Future<void> loadReadCount() async {
     final prefs = await SharedPreferences.getInstance();
     readCount = prefs.getInt("readCount") ?? 0;
@@ -79,11 +74,9 @@ class _NewsScreenState extends State<NewsScreen> {
     prefs.setInt("readCount", readCount);
   }
 
-  // ---------------- ADS ----------------
-
   void loadBanner() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-9921766463937527/1539700265', // TEST
+      adUnitId: 'ca-app-pub-9921766463937527/1539700265',
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -98,7 +91,7 @@ class _NewsScreenState extends State<NewsScreen> {
 
   void loadInterstitial() {
     InterstitialAd.load(
-      adUnitId: 'ca-app-pub-9921766463937527/2727485396', // TE
+      adUnitId: 'ca-app-pub-9921766463937527/2727485396',
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) => _interstitialAd = ad,
@@ -115,7 +108,12 @@ class _NewsScreenState extends State<NewsScreen> {
     }
   }
 
-  // ---------------- NEWS LOGIC ----------------
+  void openWallet() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const WalletScreen()),
+    );
+  }
 
   Future<void> fetchNews() async {
     setState(() => loading = true);
@@ -195,203 +193,139 @@ class _NewsScreenState extends State<NewsScreen> {
     super.dispose();
   }
 
-  // ---------------- UI ----------------
-  
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF0F2027),
-            Color(0xFF203A43),
-            Color(0xFF2C5364),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: loading
-            ? const Center(
-                child: CircularProgressIndicator(color: Colors.amber),
-              )
-            : Column(
-                children: [
-                  // 🔥 Custom Top Bar
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "RichEarn News",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber,
+        child: SafeArea(
+          child: loading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.amber),
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "RichEarn News",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber,
+                            ),
                           ),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                "$coins 🪙",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.logout,
-                                  color: Colors.white),
-                              onPressed: () async {
-                                await FirebaseAuth.instance.signOut();
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => LoginScreen()),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // 📰 News List
-                  Expanded(
-                    child: RefreshIndicator(
-                      color: Colors.amber,
-                      onRefresh: fetchNews,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: newsList.length,
-                        itemBuilder: (context, index) {
-                          final item = newsList[index];
-
-                          return AnimatedContainer(
-                            duration: Duration(milliseconds: 400 + (index * 100)),
-                            curve: Curves.easeOut,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                  color: Colors.white.withOpacity(0.2)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (item["image"] != null)
-                                  ClipRRect(
-                                    borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(20)),
-                                    child: Image.network(
-                                      item["image"],
-                                      height: 200,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: openWallet,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    "$coins 🪙",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item["title"] ?? "",
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        item["description"] ?? "",
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            color: Colors.white70),
-                                      ),
-                                      const SizedBox(height: 14),
-
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            "+5 Coins 🪙",
-                                            style: TextStyle(
-                                              color: Colors.greenAccent,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () async {
-                                              await addCoins();
-                                              readCount++;
-                                              await saveReadCount();
-                                              showInterstitialIfNeeded();
-
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (_) => ArticleScreen(
-                                                    url: item["url"],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.amber,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                            child: const Text(
-                                              "Read",
-                                              style: TextStyle(
-                                                  color: Colors.black),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.logout,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () async {
+                                  await FirebaseAuth.instance.signOut();
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => LoginScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
 
-                  // 📢 Bottom Banner
-                  if (_isBannerLoaded)
-                    SizedBox(
-                      height: _bannerAd.size.height.toDouble(),
-                      width: _bannerAd.size.width.toDouble(),
-                      child: AdWidget(ad: _bannerAd),
+                    Expanded(
+                      child: RefreshIndicator(
+                        color: Colors.amber,
+                        onRefresh: fetchNews,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: newsList.length,
+                          itemBuilder: (context, index) {
+                            final item = newsList[index];
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  item["title"] ?? "",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  item["description"] ?? "",
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                trailing: ElevatedButton(
+                                  onPressed: () async {
+                                    await addCoins();
+                                    readCount++;
+                                    await saveReadCount();
+                                    showInterstitialIfNeeded();
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            ArticleScreen(url: item["url"]),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text("Read"),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                ],
-              ),
+
+                    if (_isBannerLoaded)
+                      SizedBox(
+                        height: _bannerAd.size.height.toDouble(),
+                        width: _bannerAd.size.width.toDouble(),
+                        child: AdWidget(ad: _bannerAd),
+                      ),
+                  ],
+                ),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

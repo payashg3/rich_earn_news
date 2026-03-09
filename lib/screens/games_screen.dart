@@ -13,6 +13,7 @@ import 'tab_shoot_game.dart';
 import 'dodge_block_game.dart';
 import 'auto_sword_slash_game.dart';
 import 'tab_game_screen.dart';
+import 'wallet_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -57,6 +58,13 @@ class _GamesScreenState extends State<GamesScreen>
     super.dispose();
   }
 
+  void openWallet() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const WalletScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,20 +97,23 @@ class _GamesScreenState extends State<GamesScreen>
                       ),
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              coins == -1 ? "..." : "$coins 🪙",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                          GestureDetector(
+                            onTap: openWallet,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                coins == -1 ? "..." : "$coins 🪙",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),

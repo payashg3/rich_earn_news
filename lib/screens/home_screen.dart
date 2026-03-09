@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'news_screen.dart';
 import 'games_screen.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../utils/streak_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,18 +14,41 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedIndex = 0;
 
-  final List screens = [GamesScreen(), NewsScreen()];
+  final List screens = [const GamesScreen(), const NewsScreen()];
 
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
+
+  // 🔥 Daily Streak Check
+  void checkStreak() async {
+    int streak = await StreakManager.checkDailyLogin();
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("🔥 Daily Login Bonus"),
+        content: Text("Day $streak streak reward collected!"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Nice"),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
 
+    // 🔥 Check daily streak when app opens
+    checkStreak();
+
     _bannerAd = BannerAd(
-      adUnitId:
-          "ca-app-pub-9921766463937527/7965507816", // 🔥 Replace with your real banner ad id
+      adUnitId: "ca-app-pub-9921766463937527/7965507816",
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
