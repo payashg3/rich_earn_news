@@ -1,0 +1,194 @@
+apply plugin: 'com.android.library'
+
+// Unity shared scripts
+apply from: '../shared/keepUnitySymbols.gradle'
+apply from: '../shared/common.gradle'
+
+dependencies {
+
+    // Firebase BOM for version alignment
+    implementation platform('com.google.firebase:firebase-bom:33.5.1')
+
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Android Resolver Dependencies Start
+    implementation 'com.google.android.gms:play-services-base:18.10.0'
+    implementation 'com.google.firebase:firebase-analytics:23.0.0'
+    implementation 'com.google.firebase:firebase-appcheck:19.0.2'
+    implementation 'com.google.firebase:firebase-appcheck-debug:19.0.2'
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity:19.0.2'
+
+    // These Unity Firebase packages are not available in Maven repos
+    // implementation 'com.google.firebase:firebase-appcheck-unity:13.9.0'
+    // implementation 'com.google.firebase:firebase-app-unity:13.9.0'
+
+    implementation 'com.google.firebase:firebase-auth:24.0.1'
+    // implementation 'com.google.firebase:firebase-auth-unity:13.9.0'
+
+    implementation 'com.google.firebase:firebase-common:22.0.1'
+    implementation 'com.google.firebase:firebase-firestore:26.1.1'
+    // implementation 'com.google.firebase:firebase-firestore-unity:13.9.0'
+    // Android Resolver Dependencies End
+
+    // implementation project(':unityLibrary:FirebaseApp.androidlib')
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.games:games-activity:3.0.5'
+    implementation 'androidx.games:games-frame-pacing:2.1.2'
+}
+
+// ------------------------------------------------------------------
+// MAIN ANDROID BLOCK (single block to avoid Gradle compileSdk error)
+// ------------------------------------------------------------------
+
+android {
+
+    namespace "com.unity3d.player"
+
+    compileSdk 34
+    // buildToolsVersion = "36.0.0"  // Not required in Gradle 8+
+
+    ndkPath "/Applications/Unity/Hub/Editor/6000.3.7f1/PlaybackEngines/AndroidPlayer/NDK"
+    ndkVersion "27.2.12479018"
+
+    defaultConfig {
+        minSdk 23
+        targetSdk 34
+
+        ndk {
+            // abiFilters removed because Unity auto-manages ABI
+            debugSymbolLevel 'none'
+        }
+
+        versionCode 1
+        versionName '1.0'
+
+        consumerProguardFiles 'proguard-unity.txt'
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    androidResources {
+        noCompress = ['.unity3d', '.ress', '.resource', '.obb', '.bundle', '.unityexp'] //+ unityStreamingAssets.tokenize(', ')
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
+    }
+
+    // packaging exclusions moved inside main android block
+    packaging {
+
+        exclude ('/lib/armeabi/*' + '*')
+        exclude ('/lib/armeabi-v7a/*' + '*')
+        exclude ('/lib/mips/*' + '*')
+        exclude ('/lib/mips64/*' + '*')
+        exclude ('/lib/x86/*' + '*')
+        exclude ('/lib/x86_64/*' + '*')
+
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+}
+
+// ------------------------------------------------------------------
+// IL2CPP BUILD TASKS (UNCHANGED)
+// ------------------------------------------------------------------
+
+// android {
+
+//     tasks.register('buildIl2Cpp') {
+
+//         def workingDir = projectDir.toString().replaceAll('\\\\', '/')
+
+//         def archs = [
+//             'arm64' : 'arm64-v8a'
+//         ]
+
+//         def staticLibs = [
+//             'arm64' : [ ]
+//         ]
+
+//         inputs.files fileTree(dir: 'src/main/Il2CppOutputProject', include: ['**/*'])
+//         inputs.files fileTree(dir: 'src/main/jniStaticLibs', include: ['**/*'])
+
+//         archs.each { arch, abi ->
+//             outputs.file getIl2CppOutputPath(workingDir, abi)
+//             outputs.file getIl2CppSymbolPath(workingDir, abi)
+//         }
+
+//         doLast {
+
+//             if (project.hasProperty("skipIl2CppBuild")) {
+
+//                 println("Skipping il2cpp build")
+
+//                 archs.each { arch, abi ->
+//                     file(getIl2CppOutputPath(workingDir, abi)).write("DummyBinary")
+//                     file(getIl2CppSymbolPath(workingDir, abi)).write("DummySymbols")
+//                 }
+
+//             } else {
+
+//                 archs.each { arch, abi ->
+//                     buildIl2CppImpl(workingDir, 'Release', arch, abi, staticLibs[arch] as String[])
+//                 }
+//             }
+//         }
+//     }
+
+//     afterEvaluate {
+
+//         android.libraryVariants.all { variant ->
+
+//             def mergeTaskName = "merge${variant.name.capitalize()}JniLibFolders"
+
+//             def mergeTask = tasks.findByName(mergeTaskName)
+
+//             if (mergeTask != null) {
+//                 mergeTask.dependsOn buildIl2Cpp
+//             }
+//         }
+//     }
+
+//     sourceSets {
+//         main {
+//             jni.srcDirs = ["src/main/Il2CppOutputProject"]
+//         }
+//     }
+// }
+
+// ------------------------------------------------------------------
+// Helper functions
+// ------------------------------------------------------------------
+
+def getSdkDir() {
+
+    Properties local = new Properties()
+    local.load(new FileInputStream("${rootDir}/local.properties"))
+
+    return local.getProperty('sdk.dir')
+}
+
+def getIl2CppOutputPath(String workingDir, String abi) {
+
+    return "${workingDir}/src/main/jniLibs/${abi}/libil2cpp.so"
+}
+
+def getIl2CppSymbolPath(String workingDir, String abi) {
+
+    return "${workingDir}/symbols/${abi}/libil2cpp.so"
+}

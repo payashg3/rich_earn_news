@@ -14,6 +14,7 @@ import 'dodge_block_game.dart';
 import 'auto_sword_slash_game.dart';
 import 'tab_game_screen.dart';
 import 'wallet_screen.dart';
+import '../services/unity_launcher.dart';
 
 class GamesScreen extends StatefulWidget {
   const GamesScreen({super.key});
@@ -76,12 +77,13 @@ class _GamesScreenState extends State<GamesScreen>
             end: Alignment.bottomRight,
           ),
         ),
+
         child: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: Column(
               children: [
-                // 🔥 Top Bar
+                /// TOP BAR
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -95,6 +97,7 @@ class _GamesScreenState extends State<GamesScreen>
                           color: Colors.amber,
                         ),
                       ),
+
                       Row(
                         children: [
                           GestureDetector(
@@ -117,6 +120,7 @@ class _GamesScreenState extends State<GamesScreen>
                               ),
                             ),
                           ),
+
                           IconButton(
                             icon: const Icon(Icons.logout, color: Colors.white),
                             onPressed: () async {
@@ -135,71 +139,88 @@ class _GamesScreenState extends State<GamesScreen>
                   ),
                 ),
 
-                // 🎮 Games List
+                /// GAME LIST
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
+                      /// UNITY GAME
+                      buildUnityGameCard(
+                        Icons.local_fire_department,
+                        "Blazion",
+                        "Break the bricks 🔥",
+                      ),
+
                       buildGameCard(
                         Icons.casino,
                         "Spin & Win",
                         "Spin the wheel",
                         const SpinGameScreen(),
                       ),
+
                       buildGameCard(
                         Icons.card_giftcard,
                         "Scratch & Win",
                         "Scratch the card",
                         const ScratchGameScreen(),
                       ),
+
                       buildGameCard(
                         Icons.psychology,
                         "Pattern Panic",
                         "Test your memory",
                         const PatternMatchScreen(),
                       ),
+
                       buildGameCard(
                         Icons.calculate,
                         "Math Battle",
                         "Fast math quiz",
                         const MathBattleScreen(),
                       ),
+
                       buildGameCard(
                         Icons.color_lens,
                         "Color Mix",
                         "Create new colors",
                         const ColorMixGameScreen(),
                       ),
+
                       buildGameCard(
                         Icons.flash_on,
                         "Tap Challenge",
                         "10 sec me jitna tap ho sake",
                         const TapGameScreen(),
                       ),
+
                       buildGameCard(
                         Icons.pin,
                         "Number Guess",
                         "Guess 1-50 number",
                         const GuessNumberScreen(),
                       ),
+
                       buildGameCard(
                         Icons.gps_fixed,
                         "Shoot the Enemy",
                         "Auto fire shooting",
                         TapShootGame(),
                       ),
+
                       buildGameCard(
                         Icons.grid_on,
                         "Dodge the Blocks",
                         "Avoid falling blocks",
                         const DodgeBlocksGame(),
                       ),
+
                       buildGameCard(
                         Icons.sports_martial_arts,
                         "Auto Sword Slash",
                         "Swipe to slash enemies",
                         const AutoSwordSlashGame(),
                       ),
+
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -212,6 +233,7 @@ class _GamesScreenState extends State<GamesScreen>
     );
   }
 
+  /// NORMAL GAME CARD
   Widget buildGameCard(
     IconData icon,
     String title,
@@ -226,42 +248,54 @@ class _GamesScreenState extends State<GamesScreen>
         );
         loadCoins();
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 18),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 40, color: Colors.amber),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+      child: gameCardUI(icon, title, subtitle),
+    );
+  }
+
+  /// UNITY GAME CARD
+  Widget buildUnityGameCard(IconData icon, String title, String subtitle) {
+    return GestureDetector(
+      onTap: () async {
+        await UnityLauncher.openBlazion();
+        loadCoins();
+      },
+      child: gameCardUI(icon, title, subtitle),
+    );
+  }
+
+  /// COMMON UI
+  Widget gameCardUI(IconData icon, String title, String subtitle) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 40, color: Colors.amber),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 5),
-                  Text(subtitle, style: const TextStyle(color: Colors.white70)),
-                ],
-              ),
+                ),
+                const SizedBox(height: 5),
+                Text(subtitle, style: const TextStyle(color: Colors.white70)),
+              ],
             ),
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: Colors.white70,
-              size: 18,
-            ),
-          ],
-        ),
+          ),
+          const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 18),
+        ],
       ),
     );
   }

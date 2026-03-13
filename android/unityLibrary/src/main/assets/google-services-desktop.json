@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1064427260556",
+    "project_id": "blazion-18e3e",
+    "storage_bucket": "blazion-18e3e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1064427260556:android:d20bd42bbcd12a4a2ac9a9",
+        "android_client_info": {
+          "package_name": "com.richearn.blazion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAojKZ2_lFNY_Sv9WfOzXo3YOik0uJWVzU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
